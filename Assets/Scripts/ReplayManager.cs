@@ -12,11 +12,20 @@ public struct Vector3Data
     public Vector3 ToVector3() => new Vector3(x, y, z);
 }
 
-// Class to hold the saved data structure
+// Struct to hold key event data
+[System.Serializable]
+public class KeyEventData
+{
+    public float time;
+    public Vector3Data position;
+    public string key;
+}
+
 [System.Serializable]
 public class SaveData
 {
     public List<Vector3Data> playerPositions;
+    public List<KeyEventData> keyEvents;
 }
 
 public class ReplayManager : MonoBehaviour
@@ -24,6 +33,14 @@ public class ReplayManager : MonoBehaviour
     public LineRenderer fullTrajectoryLine;   // Trajectory for full path display
     public LineRenderer replayTrajectoryLine; // Trajectory for replay display
     public GameObject player;
+
+    public GameObject spaceMarkerPrefab; // Game Object to mark Space key events
+    public GameObject mMarkerPrefab;     // Game Object to mark M key events
+
+    public Transform spaceMarkerParent; // Parent for Space key markers
+    public Transform mMarkerParent;     // Parent for M key markers
+
+    public KeyEventManager keyEventManager; // Reference to KeyEventManager
 
     // List to hold the recorded positions
     private List<Vector3> replayPositions = new List<Vector3>();
@@ -34,16 +51,6 @@ public class ReplayManager : MonoBehaviour
     {
         LoadReplayData();
         DrawFullTrajectory();
-    }
-
-    void Update()
-    {
-        /*
-        if (Input.GetKeyDown(KeyCode.P) && !isReplaying)
-        {
-            StartCoroutine(ReplayCoroutine());
-        }
-        */
     }
 
     void LoadReplayData()
@@ -63,6 +70,69 @@ public class ReplayManager : MonoBehaviour
             foreach (var v in data.playerPositions)
             {
                 replayPositions.Add(v.ToVector3());
+            }
+
+            // Instantiate markers for Space and M key events with color from KeyEventManager
+            if (data.keyEvents != null && keyEventManager != null)
+            {
+                // Space key marker color
+                Color spaceMarkerColor = Color.white;
+                if (spaceMarkerPrefab != null)
+                {
+                    foreach (var setting in keyEventManager.prefabColorSettings)
+                    {
+                        if (setting.prefab != null && setting.prefab.name == spaceMarkerPrefab.name)
+                        {
+                            spaceMarkerColor = setting.color;
+                            break;
+                        }
+                    }
+                }
+
+                // M key marker color
+                Color mMarkerColor = Color.white;
+                if (mMarkerPrefab != null)
+                {
+                    foreach (var setting in keyEventManager.prefabColorSettings)
+                    {
+                        if (setting.prefab != null && setting.prefab.name == mMarkerPrefab.name)
+                        {
+                            mMarkerColor = setting.color;
+                            break;
+                        }
+                    }
+                }
+
+                // Instantiate markers at recorded key event positions
+                foreach (var evt in data.keyEvents)
+                {
+                    if (evt.key == "Space" && spaceMarkerPrefab != null)
+                    {
+                        Vector3 pos = evt.position.ToVector3();
+                        GameObject marker = Instantiate(spaceMarkerPrefab, pos, Quaternion.identity, spaceMarkerParent);
+                        Renderer[] renderers = marker.GetComponentsInChildren<Renderer>(true);
+                        foreach (var renderer in renderers)
+                        {
+                            foreach (var mat in renderer.materials)
+                            {
+                                mat.color = spaceMarkerColor;
+                            }
+                        }
+                    }
+                    else if (evt.key == "M" && mMarkerPrefab != null)
+                    {
+                        Vector3 pos = evt.position.ToVector3();
+                        GameObject marker = Instantiate(mMarkerPrefab, pos, Quaternion.identity, mMarkerParent);
+                        Renderer[] renderers = marker.GetComponentsInChildren<Renderer>(true);
+                        foreach (var renderer in renderers)
+                        {
+                            foreach (var mat in renderer.materials)
+                            {
+                                mat.color = mMarkerColor;
+                            }
+                        }
+                    }
+                }
             }
         }
         else
