@@ -7,6 +7,8 @@ public class ReplayCameraController : MonoBehaviour
     public float moveSpeed = 10f;
     public float lookSpeed = 2f;
     public GameObject OnMovingFrame;
+    public GameObject InfoPanel;
+    public GameObject Logo;
 
     private float yaw = 0f;
     private float pitch = 0f;
@@ -54,6 +56,8 @@ public class ReplayCameraController : MonoBehaviour
                 Cursor.visible = false;
 
                 OnMovingFrame.SetActive(true);
+                InfoPanel.SetActive(false);
+                Logo.SetActive(false);
 
                 Debug.Log("Cursor locked");
             }
@@ -63,6 +67,8 @@ public class ReplayCameraController : MonoBehaviour
                 Cursor.visible = true;
 
                 OnMovingFrame.SetActive(false);
+                InfoPanel.SetActive(true);
+                Logo.SetActive(true);
 
                 Debug.Log("Cursor unlocked");
             }
